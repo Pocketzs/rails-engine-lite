@@ -11,16 +11,23 @@ RSpec.describe "Merchants API" do
   
       merchants = JSON.parse(response.body, symbolize_names: true)
       # require 'pry'; binding.pry
+      merchant_data = merchants[:data]
       
-      expect(merchants.count).to eq(5)
-      expect(merchants).to be_a(Array)
+      expect(merchant_data.count).to eq(5)
+      expect(merchant_data).to be_a(Array)
   
-      merchants.each do |merchant|
+      merchant_data.each do |merchant|
         expect(merchant).to have_key(:id)
-        expect(merchant[:id]).to be_a(Integer)
+        expect(merchant[:id]).to be_a(String)
+
+        expect(merchant).to have_key(:type)
+        expect(merchant[:type]).to eq("merchant")
   
-        expect(merchant).to have_key(:name)
-        expect(merchant[:name]).to be_a(String)
+        expect(merchant).to have_key(:attributes)
+        expect(merchant[:attributes]).to be_a(Hash)
+
+        expect(merchant[:attributes]).to have_key(:name)
+        expect(merchant[:attributes][:name]).to be_a(String)
       end
     end
 
@@ -31,9 +38,10 @@ RSpec.describe "Merchants API" do
       expect(response).to be_successful
   
       merchants = JSON.parse(response.body, symbolize_names: true)
+      merchant_data = merchants[:data]
       
-      expect(merchants.count).to eq(1)
-      expect(merchants).to be_a(Array)
+      expect(merchant_data.count).to eq(1)
+      expect(merchant_data).to be_a(Array)
     end
 
     it 'returns an array if no resources are found' do
@@ -42,9 +50,10 @@ RSpec.describe "Merchants API" do
       expect(response).to be_successful
   
       merchants = JSON.parse(response.body, symbolize_names: true)
+      merchant_data = merchants[:data]
       
-      expect(merchants.count).to eq(0)
-      expect(merchants).to be_a(Array)
+      expect(merchant_data.count).to eq(0)
+      expect(merchant_data).to be_a(Array)
     end
   end
 end
