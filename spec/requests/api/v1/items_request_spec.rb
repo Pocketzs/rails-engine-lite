@@ -10,6 +10,7 @@ RSpec.describe "Items API" do
       get "/api/v1/items"
 
       expect(response).to be_successful
+      expect(response.status).to eq(200)
 
       items = JSON.parse(response.body, symbolize_names: true)
 
@@ -46,6 +47,7 @@ RSpec.describe "Items API" do
       get "/api/v1/items"
   
       expect(response).to be_successful
+      expect(response.status).to eq(200)
   
       items = JSON.parse(response.body, symbolize_names: true)
       items_data = items[:data]
@@ -58,6 +60,7 @@ RSpec.describe "Items API" do
       get "/api/v1/items"
   
       expect(response).to be_successful
+      expect(response.status).to eq(200)
   
       items = JSON.parse(response.body, symbolize_names: true)
       items_data = items[:data]
