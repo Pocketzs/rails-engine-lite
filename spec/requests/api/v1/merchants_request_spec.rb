@@ -55,5 +55,15 @@ RSpec.describe "Merchants API" do
       expect(merchant_data.count).to eq(0)
       expect(merchant_data).to be_a(Array)
     end
+
+    it 'does NOT include dependent resources' do
+      create(:merchant)
+      get "/api/v1/merchants"
+
+      merchants = JSON.parse(response.body, symbolize_names: true)
+      merchant_data = merchants[:data].first
+
+      expect(merchant_data.keys).to_not include(:relationships)
+    end
   end
 end
