@@ -295,4 +295,20 @@ RSpec.describe "Items API" do
       expect(error_json[:errors].first[:detail]).to eq("Validation failed: Unit price must be greater than or equal to 0")
     end
   end
+
+  describe 'destroy an item' do
+    it 'can destroy an item and any associated data' do
+      merchant = create(:merchant)
+      item = create(:item, merchant: merchant)
+
+      expect(Item.count).to eq(1)
+
+      delete "/api/v1/items/#{item.id}"
+
+      expect(response).to have_http_status(:no_content)
+
+      expect(Item.count).to eq(0)
+      expect { Item.find(item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
 end
