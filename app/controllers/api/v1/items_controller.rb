@@ -10,7 +10,7 @@ class Api::V1::ItemsController < ApplicationController
   def create
     # require 'pry'; binding.pry
     item = Item.create!(item_params)
-    render json: ItemSerializer.new(item), status: :created
+    render json: CreatedItemSerializer.new(item), status: :created
   end
 
   private
