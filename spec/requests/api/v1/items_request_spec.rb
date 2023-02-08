@@ -126,4 +126,26 @@ RSpec.describe "Items API" do
       expect(response.status).to eq(404)
     end
   end
+
+  describe 'create an item' do
+    it 'can create a new item' do
+      merchant1 = create(:merchant)
+      item_params = {
+        name: Faker::Games::ElderScrolls.weapon,
+        description: "Good for killing #{Faker::Games::ElderScrolls.creature}",
+        unit_price: Faker::Commerce.price,
+        merchant_id: merchant1.id
+      }
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+
+      created_item = Item.last
+
+      expect(response).to have_http_status(:created)
+      expect(created_item.name).to eq(item_params[:name])
+      expect(created_item.description).to eq(item_params[:description])
+      expect(created_item.unit_price).to eq(item_params[:unit_price])
+    end
+  end
 end
