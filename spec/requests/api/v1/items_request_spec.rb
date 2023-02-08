@@ -147,5 +147,25 @@ RSpec.describe "Items API" do
       expect(created_item.description).to eq(item_params[:description])
       expect(created_item.unit_price).to eq(item_params[:unit_price])
     end
+
+    it 'returns error if item creation invalid' do
+      merchant1 = create(:merchant)
+      item_params = {
+        name: '',
+        description: '',
+        unit_price: '',
+        merchant_id: merchant1.id
+      }
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.status).to eq(422)
+      
+      error_json = JSON.parse(response.body, symbolize_names:true)
+      # require 'pry'; binding.pry
+      expect(error_json[:errors].first[:detail]).to eq("Validation failed: Name can't be blank, Description can't be blank, Unit price can't be blank, Unit price is not a number")
+    end
   end
 end
