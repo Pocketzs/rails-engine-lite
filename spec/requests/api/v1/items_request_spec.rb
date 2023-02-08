@@ -133,7 +133,7 @@ RSpec.describe "Items API" do
       item_params = {
         name: Faker::Games::ElderScrolls.weapon,
         description: "Good for killing #{Faker::Games::ElderScrolls.creature}",
-        unit_price: Faker::Commerce.price,
+        unit_price: 100.99,
         merchant_id: merchant1.id
       }
       headers = {"CONTENT_TYPE" => "application/json"}
