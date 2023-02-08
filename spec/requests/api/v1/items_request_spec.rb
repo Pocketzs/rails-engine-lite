@@ -205,4 +205,94 @@ RSpec.describe "Items API" do
       expect(error_json[:errors].first[:detail]).to eq("Validation failed: Unit price must be greater than or equal to 0")
     end
   end
+
+  describe 'update an item' do
+    it 'can update an exisiting item' do
+      m1 = create(:merchant)
+      m2 = create(:merchant)
+      item1 = create(:item, name: 'old name', description: 'old description', unit_price: 1.5, merchant: m1)
+
+      update_params = {
+        name: "value1",
+        description: "value2",
+        unit_price: 100.99,
+        merchant_id: m2.id
+      }
+
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      patch "/api/v1/items/#{item1.id}", headers: headers, params: JSON.generate(item: update_params)
+
+      expect(response).to have_http_status(:ok)
+
+      updated_json = JSON.parse(response.body, symbolize_names:true)
+      item_data = updated_json[:data]
+      expect(item_data).to be_a(Hash)
+
+      expect(item_data).to have_key(:id)
+      expect(item_data[:id]).to be_a(String)
+      
+      expect(item_data).to have_key(:type)
+      expect(item_data[:type]).to eq("item")
+
+      expect(item_data).to have_key(:attributes)
+      expect(item_data[:attributes]).to be_a(Hash)
+
+      attributes = item_data[:attributes]
+
+      expect(attributes).to have_key(:name)
+      expect(attributes[:name]).to be_a(String)
+      
+      expect(attributes).to have_key(:description)
+      expect(attributes[:description]).to be_a(String)
+     
+      expect(attributes).to have_key(:unit_price)
+      expect(attributes[:unit_price]).to be_a(Float)
+      
+      expect(attributes).to have_key(:merchant_id)
+      expect(attributes[:merchant_id]).to be_a(Integer)
+
+      updated_item = Item.find(item1.id)
+
+      expect(updated_item.name).to_not eq('old name')
+      expect(updated_item.name).to eq(update_params[:name])
+      expect(updated_item.description).to_not eq('old description')
+      expect(updated_item.description).to eq(update_params[:description])
+      expect(updated_item.unit_price).to_not eq('old unit_price')
+      expect(updated_item.unit_price).to eq(update_params[:unit_price])
+      expect(updated_item.merchant_id).to_not eq(m1.id)
+      expect(updated_item.merchant_id).to eq(update_params[:merchant_id])
+    end
+
+    it 'returns an error if item update invalid' do
+      merchant1 = create(:merchant)
+      item1 = create(:item, merchant: merchant1)
+      update_params = {
+        name: '',
+        description: '',
+        unit_price: '',
+        merchant_id: ''
+      }
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      patch "/api/v1/items/#{item1.id}", headers: headers, params: JSON.generate(item: update_params)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.status).to eq(422)
+      
+      error_json = JSON.parse(response.body, symbolize_names:true)
+      expect(error_json[:errors].first[:detail]).to eq("Validation failed: Merchant must exist, Name can't be blank, Description can't be blank, Unit price can't be blank, Unit price is not a number")
+
+      update_params = {
+        name: 'new_name',
+        description: 'new_description',
+        unit_price: -1,
+        merchant_id: merchant1.id
+      }
+
+      patch "/api/v1/items/#{item1.id}", headers: headers, params: JSON.generate(item: update_params)
+      error_json = JSON.parse(response.body, symbolize_names:true)
+      expect(error_json[:errors].first[:detail]).to eq("Validation failed: Unit price must be greater than or equal to 0")
+    end
+  end
 end

@@ -13,6 +13,13 @@ class Api::V1::ItemsController < ApplicationController
     render json: CreatedItemSerializer.new(item), status: :created
   end
 
+  def update
+    # require 'pry'; binding.pry
+    item = Item.find(params[:id])
+    item.update!(item_params)
+    render json: CreatedItemSerializer.new(item)
+  end
+
   private
 
   def item_params
