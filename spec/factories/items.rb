@@ -3,6 +3,6 @@ FactoryBot.define do
     name { Faker::Games::ElderScrolls.weapon }
     description { "Good for killing #{Faker::Games::ElderScrolls.creature}" }
     unit_price { Faker::Commerce.price }
-    merchant_id { nil }
+    merchant
   end
 end
