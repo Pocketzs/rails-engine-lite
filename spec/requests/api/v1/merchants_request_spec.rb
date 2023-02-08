@@ -51,7 +51,7 @@ RSpec.describe "Merchants API" do
   
       expect(response).to be_successful
       expect(response.status).to eq(200)
-      
+
       merchants = JSON.parse(response.body, symbolize_names: true)
       merchant_data = merchants[:data]
       
@@ -67,6 +67,47 @@ RSpec.describe "Merchants API" do
       merchant_data = merchants[:data].first
 
       expect(merchant_data.keys).to_not include(:relationships)
+    end
+  end
+
+  describe 'fetch a single merchant' do
+    it 'returns a single merchant given a merchants id' do
+      merchant1 = create(:merchant)
+
+      get "/api/v1/merchants/#{merchant1.id}"
+
+      expect(response).to be_successful
+      expect(response.status).to eq(200)
+
+      merchant_json = JSON.parse(response.body, symbolize_names: true)
+      merchant_data = merchant_json[:data]
+
+      expect(merchant_data).to be_a(Hash)
+
+      expect(merchant_data).to have_key(:id)
+      expect(merchant_data[:id]).to be_a(String)
+      
+      expect(merchant_data).to have_key(:type)
+      expect(merchant_data[:type]).to eq("merchant")
+
+      expect(merchant_data).to have_key(:attributes)
+      expect(merchant_data[:attributes]).to be_a(Hash)
+
+      attributes = merchant_data[:attributes]
+
+      expect(attributes).to have_key(:name)
+      expect(attributes[:name]).to be_a(String)
+      # require 'pry'; binding.pry
+    end
+
+    it 'returns error if merchant id doesnt exist' do
+      get "/api/v1/merchants/1"
+
+      error_json = JSON.parse(response.body, symbolize_names:true)
+      # require 'pry'; binding.pry
+
+      expect(response).to have_http_status(:not_found)
+      expect(response.status).to eq(404)
     end
   end
 end
