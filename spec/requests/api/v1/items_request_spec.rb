@@ -146,6 +146,33 @@ RSpec.describe "Items API" do
       expect(created_item.name).to eq(item_params[:name])
       expect(created_item.description).to eq(item_params[:description])
       expect(created_item.unit_price).to eq(item_params[:unit_price])
+
+      created_item_json = JSON.parse(response.body, symbolize_names:true)
+      item_data = created_item_json[:data]
+      expect(item_data).to be_a(Hash)
+
+      expect(item_data).to have_key(:id)
+      expect(item_data[:id]).to be_a(String)
+      
+      expect(item_data).to have_key(:type)
+      expect(item_data[:type]).to eq("item")
+
+      expect(item_data).to have_key(:attributes)
+      expect(item_data[:attributes]).to be_a(Hash)
+
+      attributes = item_data[:attributes]
+
+      expect(attributes).to have_key(:name)
+      expect(attributes[:name]).to be_a(String)
+      
+      expect(attributes).to have_key(:description)
+      expect(attributes[:description]).to be_a(String)
+     
+      expect(attributes).to have_key(:unit_price)
+      expect(attributes[:unit_price]).to be_a(Float)
+      
+      expect(attributes).to have_key(:merchant_id)
+      expect(attributes[:merchant_id]).to be_a(Integer)
     end
 
     it 'returns error if item creation invalid' do
