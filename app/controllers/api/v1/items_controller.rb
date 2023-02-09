@@ -10,14 +10,14 @@ class Api::V1::ItemsController < ApplicationController
   def create
     # require 'pry'; binding.pry
     item = Item.create!(item_params)
-    render json: CreatedItemSerializer.new(item), status: :created
+    render json: MerchantItemSerializer.new(item), status: :created
   end
 
   def update
     # require 'pry'; binding.pry
     item = Item.find(params[:id])
     item.update!(item_params)
-    render json: CreatedItemSerializer.new(item)
+    render json: MerchantItemSerializer.new(item)
   end
 
   def destroy
