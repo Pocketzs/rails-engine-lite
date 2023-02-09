@@ -37,6 +37,9 @@ RSpec.describe "Items API" do
 
         expect(item[:attributes]).to have_key(:unit_price)
         expect(item[:attributes][:unit_price]).to be_a(Float)
+        
+        expect(item[:attributes]).to have_key(:merchant_id)
+        expect(item[:attributes][:merchant_id]).to be_a(Integer)
       end
       # require 'pry'; binding.pry
     end
@@ -114,6 +117,9 @@ RSpec.describe "Items API" do
      
       expect(attributes).to have_key(:unit_price)
       expect(attributes[:unit_price]).to be_a(Float)
+      
+      expect(attributes).to have_key(:merchant_id)
+      expect(attributes[:merchant_id]).to be_a(Integer)
     end
 
     it 'returns error if item id doesnt exist' do
@@ -187,8 +193,8 @@ RSpec.describe "Items API" do
 
       post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
 
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.status).to eq(422)
+      expect(response).to have_http_status(:bad_request)
+      expect(response.status).to eq(400)
       
       error_json = JSON.parse(response.body, symbolize_names:true)
       expect(error_json[:errors].first[:detail]).to eq("Validation failed: Merchant must exist, Name can't be blank, Description can't be blank, Unit price can't be blank, Unit price is not a number")
@@ -277,8 +283,8 @@ RSpec.describe "Items API" do
 
       patch "/api/v1/items/#{item1.id}", headers: headers, params: JSON.generate(item: update_params)
 
-      expect(response).to have_http_status(:unprocessable_entity)
-      expect(response.status).to eq(422)
+      expect(response).to have_http_status(:bad_request)
+      expect(response.status).to eq(400)
       
       error_json = JSON.parse(response.body, symbolize_names:true)
       expect(error_json[:errors].first[:detail]).to eq("Validation failed: Merchant must exist, Name can't be blank, Description can't be blank, Unit price can't be blank, Unit price is not a number")
