@@ -22,7 +22,7 @@ class Api::V1::ItemsController < ApplicationController
 
   def destroy
     item = Item.find(params[:id])
-    item.delete
+    item.destroy
   end
 
   private
