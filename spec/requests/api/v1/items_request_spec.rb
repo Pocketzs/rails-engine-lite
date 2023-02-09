@@ -295,4 +295,150 @@ RSpec.describe "Items API" do
       expect(error_json[:errors].first[:detail]).to eq("Validation failed: Unit price must be greater than or equal to 0")
     end
   end
+
+  describe 'destroy an item' do
+    it 'can destroy an item and any associated data' do
+      merchant = create(:merchant)
+      item = create(:item, merchant: merchant)
+
+      expect(Item.count).to eq(1)
+
+      delete "/api/v1/items/#{item.id}"
+
+      expect(response).to have_http_status(:no_content)
+      expect(response.body).to eq('')
+      # require 'pry'; binding.pry
+
+      expect(Item.count).to eq(0)
+      expect { Item.find(item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+
+    it 'deletes invoice if it is the only item on invoice' do
+      customer = create(:customer)
+      merchant = create(:merchant)
+      invoice = create(:invoice, customer: customer, merchant: merchant)
+      item = create(:item, merchant: merchant)
+      invoice_item = create(:invoice_item, item: item, invoice: invoice)
+      
+      expect(Item.count).to eq(1)
+      expect(Invoice.count).to eq(1)
+      expect(InvoiceItem.count).to eq(1)
+
+      delete "/api/v1/items/#{item.id}"
+
+      expect(Item.count).to eq(0)
+      expect(Invoice.count).to eq(0)
+      expect(InvoiceItem.count).to eq(0)
+      expect { Item.find(item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { Invoice.find(invoice.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { InvoiceItem.find(invoice_item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      # require 'pry'; binding.pry
+    end
+
+    it 'does not delete invoice if there are still items on that invoice' do
+      customer = create(:customer)
+      merchant = create(:merchant)
+      invoice = create(:invoice, customer: customer, merchant: merchant)
+      item = create(:item, merchant: merchant)
+      item2 = create(:item, merchant: merchant)
+      invoice_item = create(:invoice_item, item: item, invoice: invoice)
+      invoice_item2 = create(:invoice_item, item: item2, invoice: invoice)
+      
+      expect(Item.count).to eq(2)
+      expect(Invoice.count).to eq(1)
+      expect(InvoiceItem.count).to eq(2)
+
+      delete "/api/v1/items/#{item.id}"
+
+      expect(Item.count).to eq(1)
+      expect(Invoice.count).to eq(1)
+      expect(InvoiceItem.count).to eq(1)
+      expect { Item.find(item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { InvoiceItem.find(invoice_item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect(Invoice.find(invoice.id)).to eq(invoice)
+    end
+
+    it 'destroys invoice if the invoice_items associated with the deleted item are the only ones on the invoice' do
+      customer = create(:customer)
+      merchant = create(:merchant)
+      invoice = create(:invoice, customer: customer, merchant: merchant)
+      item = create(:item, merchant: merchant)
+      invoice_item = create(:invoice_item, item: item, invoice: invoice)
+      invoice_item2 = create(:invoice_item, item: item, invoice: invoice)
+      
+      expect(Item.count).to eq(1)
+      expect(Invoice.count).to eq(1)
+      expect(InvoiceItem.count).to eq(2)
+
+      delete "/api/v1/items/#{item.id}"
+
+      expect(Item.count).to eq(0)
+      expect(Invoice.count).to eq(0)
+      expect(InvoiceItem.count).to eq(0)
+      expect { Item.find(item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { Invoice.find(invoice.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { InvoiceItem.find(invoice_item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+
+    it 'destroys all invoices if the item deleted was the only item on those invoices' do
+      customer = create(:customer)
+      merchant = create(:merchant)
+      invoice = create(:invoice, customer: customer, merchant: merchant)
+      invoice2 = create(:invoice, customer: customer, merchant: merchant)
+      item = create(:item, merchant: merchant)
+      invoice_item = create(:invoice_item, item: item, invoice: invoice)
+      invoice_item2 = create(:invoice_item, item: item, invoice: invoice2)
+
+      expect(Item.count).to eq(1)
+      expect(Invoice.count).to eq(2)
+      expect(InvoiceItem.count).to eq(2)
+
+      delete "/api/v1/items/#{item.id}"
+
+      expect(Item.count).to eq(0)
+      expect(Invoice.count).to eq(0)
+      expect(InvoiceItem.count).to eq(0)
+      expect { Item.find(item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { Invoice.find(invoice.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { Invoice.find(invoice2.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { InvoiceItem.find(invoice_item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { InvoiceItem.find(invoice_item2.id) }.to raise_error(ActiveRecord::RecordNotFound)
+    end
+
+    it 'only destroys invoices where the deleted item was the only item on the invoice' do
+      customer = create(:customer)
+      merchant = create(:merchant)
+      invoice = create(:invoice, customer: customer, merchant: merchant)
+      invoice2 = create(:invoice, customer: customer, merchant: merchant)
+      item = create(:item, merchant: merchant)
+      item2 = create(:item, merchant: merchant)
+      invoice_item = create(:invoice_item, item: item, invoice: invoice)
+      invoice_item2 = create(:invoice_item, item: item, invoice: invoice2)
+      invoice_item3 = create(:invoice_item, item: item2, invoice: invoice2)
+
+      expect(Item.count).to eq(2)
+      expect(Invoice.count).to eq(2)
+      expect(InvoiceItem.count).to eq(3)
+
+      delete "/api/v1/items/#{item.id}"
+
+      expect(Item.count).to eq(1)
+      expect(Invoice.count).to eq(1)
+      expect(InvoiceItem.count).to eq(1)
+      expect { Item.find(item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { Invoice.find(invoice.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { InvoiceItem.find(invoice_item.id) }.to raise_error(ActiveRecord::RecordNotFound)
+      expect { InvoiceItem.find(invoice_item2.id) }.to raise_error(ActiveRecord::RecordNotFound)
+     
+      expect(Invoice.find(invoice2.id)).to eq(invoice2)
+      expect(InvoiceItem.find(invoice_item3.id)).to eq(invoice_item3)
+    end
+
+    it 'returns an error if you try to delete an item that does not exist' do
+      delete "/api/v1/items/1"
+      expect(response).to have_http_status(:not_found)
+      error_json = JSON.parse(response.body, symbolize_names:true)
+      expect(error_json[:errors].first[:detail]).to eq("Couldn't find Item with 'id'=1")
+    end
+  end
 end
