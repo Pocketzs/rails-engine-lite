@@ -4,7 +4,7 @@ class ApplicationController < ActionController::API
 
   def render_unprocessable_entity_response(exception)
     # require 'pry'; binding.pry
-    render json: { message: "Record Invalid", errors: [detail: exception.message, status: "422"] }, status: :unprocessable_entity
+    render json: { message: "Record Invalid", errors: [detail: exception.message, status: "400"] }, status: :bad_request
   end
 
   def render_not_found_response(exception)
