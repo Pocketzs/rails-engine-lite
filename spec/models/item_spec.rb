@@ -14,7 +14,7 @@ RSpec.describe Item, type: :model do
     it { should validate_numericality_of(:unit_price).is_greater_than_or_equal_to(0) }
   end
 
-  describe 'callback methods' do
+  describe 'callback/private methods' do
     describe 'after_destroy' do
       it 'triggers destroy_empty_invoices after destroy' do
         item = create(:item)
@@ -37,6 +37,52 @@ RSpec.describe Item, type: :model do
         expect(Invoice.count).to eq(1)
         expect(Invoice.all).to include(has_items)
         expect(Invoice.all).to_not include(no_items)
+      end
+    end
+  end
+
+  describe 'class methods' do
+    describe '.find_item_by_name' do
+      it 'return the first object in the database in case-insensitive 
+      alphabetical order if multiple matches are found' do
+        item1 = create(:item, name: 'Turing')
+        item2 = create(:item, name: 'Ring World')
+
+        expect(Item.find_item_by_name('ring')).to eq(item2)
+        expect(Item.find_item_by_name('Ring')).to eq(item2)
+      end
+
+      it 'returns based on partial word matches' do
+        item1 = create(:item, name: 'Turing')
+
+        expect(Item.find_item_by_name('ring')).to eq(item1)
+      end
+
+      # it 'raises an error if item is not found' do
+      #   expect { Item.find_item_by_name('NOMATCH') }.to raise_error(ActiveRecord::RecordNotFound)
+      # end
+
+      it 'raises an error if no query is supplied for name' do
+        expect { Item.find_item_by_name('') }.to raise_error(ActiveRecord::RecordInvalid)
+      end
+
+      it 'raises an error if the query is invalid' do
+        expect { Item.find_item_by_name('1') }.to raise_error(ActiveRecord::RecordInvalid)
+        expect { Item.find_item_by_name('!') }.to raise_error(ActiveRecord::RecordInvalid)
+        expect { Item.find_item_by_name('1123aasd') }.to raise_error(ActiveRecord::RecordInvalid)
+        expect { Item.find_item_by_name('asd123') }.to raise_error(ActiveRecord::RecordInvalid)
+        expect { Item.find_item_by_name(' ') }.to raise_error(ActiveRecord::RecordInvalid)
+        # expect { Item.find_item_by_name(nil) }.to raise_error(ActiveRecord::RecordInvalid)
+      end
+    end
+
+    describe '.find_item_by unit_price' do
+      it 'returns an item based on min and max unit price' do
+        item1 = create(:item, name: 'Carrot', unit_price: 4.99)
+        item2 = create(:item, name: 'Banana', unit_price: 4.99)
+        item3 = create(:item, name: 'Apple', unit_price: 2.50)
+
+        expect(Item.find_item_by_unit_price(2.50, 4.99)).to eq(item3)
       end
     end
   end
