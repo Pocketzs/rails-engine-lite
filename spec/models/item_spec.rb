@@ -40,4 +40,40 @@ RSpec.describe Item, type: :model do
       end
     end
   end
+
+  describe 'class methods' do
+    describe '.find_item_by_name' do
+      it 'return the first object in the database in case-insensitive 
+      alphabetical order if multiple matches are found' do
+        item1 = create(:item, name: 'Turing')
+        item2 = create(:item, name: 'Ring World')
+
+        expect(Item.find_item_by_name('ring')).to eq(item2)
+        expect(Item.find_item_by_name('Ring')).to eq(item2)
+      end
+
+      it 'returns based on partial word matches' do
+        item1 = create(:item, name: 'Turing')
+
+        expect(Item.find_item_by_name('ring')).to eq(item1)
+      end
+
+      it 'raises an error if item is not found' do
+        expect { Item.find_item_by_name('NOMATCH') }.to raise_error(ActiveRecord::RecordNotFound)
+      end
+
+      it 'raises an error if no query is supplied for name' do
+        expect { Item.find_item_by_name('') }.to raise_error(ActiveRecord::RecordInvalid)
+      end
+
+      it 'raises an error if the query is invalid' do
+        expect { Item.find_item_by_name('1') }.to raise_error(ActiveRecord::RecordInvalid)
+        expect { Item.find_item_by_name('!') }.to raise_error(ActiveRecord::RecordInvalid)
+        expect { Item.find_item_by_name('1123aasd') }.to raise_error(ActiveRecord::RecordInvalid)
+        expect { Item.find_item_by_name('asd123') }.to raise_error(ActiveRecord::RecordInvalid)
+        expect { Item.find_item_by_name(' ') }.to raise_error(ActiveRecord::RecordInvalid)
+        expect { Item.find_item_by_name(nil) }.to raise_error(ActiveRecord::RecordInvalid)
+      end
+    end
+  end
 end
