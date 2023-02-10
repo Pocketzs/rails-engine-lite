@@ -8,10 +8,15 @@ class Item < ApplicationRecord
   after_destroy :destroy_empty_invoices
 
   def self.find_item_by_name(query)
-    # where('lower(name) like ?', "%#{query.downcase}%").order(:name).limit(1).first
-    raise ActiveRecord::RecordInvalid unless is_valid_string?(query)
-    # Item.order(:name).find_by!('lower(name) like ?', "%#{query.downcase}%")
-    Item.order(:name).find_by!('name ilike ?', "%#{query}%")
+    raise ActiveRecord::RecordInvalid unless valid_name?(query)
+    order(:name).find_by('name ilike ?', "%#{query}%")
+  end
+
+  def self.find_item_by_unit_price(min = nil, max = nil)
+    raise ActiveRecord::RecordInvalid if invalid_prices?(min, max)
+    min = Float::INFINITY if min.nil?
+    max = Float::INFINITY if max.nil?
+    order(:name).find_by(unit_price: min.to_f..max.to_f)
   end
 
   private
@@ -20,9 +25,14 @@ class Item < ApplicationRecord
     Invoice.destroy_all
   end
 
-  def self.is_valid_string?(query)
-    return false if query.nil?
+  def self.valid_name?(query)
     true unless query.empty? || query.match?(/[^a-zA-Z]+/)
-    # require 'pry'; binding.pry
+  end
+
+  def self.invalid_prices?(min, max)
+    unless min.nil? || max.nil?
+      return true if min.to_f > max.to_f
+    end
+    min.to_f < 0 || max.to_f < 0 || min == "" || max == ""
   end
 end
