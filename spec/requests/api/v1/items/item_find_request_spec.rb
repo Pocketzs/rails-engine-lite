@@ -41,3 +41,37 @@ RSpec.describe 'Item Find API' do
       expect(attributes).to have_key(:merchant_id)
       expect(attributes[:merchant_id]).to be_a(Integer)
     end
+
+    it 'if more than one match, will return the first in alphabetical order' do
+      item1 = create(:item, name: 'Turing')
+      item2 = create(:item, name: 'Ring World')
+
+      get "/api/v1/items/find?name=ring"
+
+      expect(response).to have_http_status(:ok)
+
+      item_json = JSON.parse(response.body, symbolize_names:true)
+
+      item_data = item_json[:data]
+      attributes = item_data[:attributes]
+      
+      expect(attributes[:name]).to eq(item2.name)
+    end
+
+    it 'if no query params raises error' do
+      get "/api/v1/items/find?name="
+
+      expect(response).to have_http_status(:bad_request)
+
+      error_json = JSON.parse(response.body, symbolize_names:true)
+      expect(error_json[:errors].first[:detail]).to eq("Record invalid")
+      
+      get "/api/v1/items/find"
+
+      expect(response).to have_http_status(:bad_request)
+
+      error_json = JSON.parse(response.body, symbolize_names:true)
+      expect(error_json[:errors].first[:detail]).to eq("Record invalid")
+    end
+  end
+end
